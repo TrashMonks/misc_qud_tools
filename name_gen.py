@@ -1,5 +1,40 @@
 import xml.etree.ElementTree as ET
-import regex, random, os
+import regex, random, os, luadata
+
+def int_with_default(element, default=0):
+    if element:
+        return int(element)
+    else:
+        return default
+
+def namedump(filename='Naming.xml'):
+    tree = ET.parse(filename)
+    root = tree.getroot()
+    naming = {}
+    for namestyle in root.find('namestyles').findall('namestyle'):
+        style = namestyle.get('Name').lower() 
+        naming[style] = {}
+        naming[style]['HyphenationChance'] = int_with_default(namestyle.get('HyphenationChance'))
+        naming[style]['TwoNameChance'] = int_with_default(namestyle.get('TwoNameChance'))
+        for type in ['pre', 'in', 'post']:
+            capType = type.capitalize()
+            fixes = namestyle.find(type + 'fixes')
+            if fixes:
+                fix_count = fixes.get('Amount')
+                match = regex.match(r'(\d+)(-(\d+))?', fix_count)
+                min = int(match.group(1))
+                max_str = match.group(3)
+                if max_str:
+                    max = int(max_str)
+                else:
+                    max = min
+                naming[style][capType + 'fixes'] = [f.get('Name') for f in fixes.findall(type + 'fix')]
+                naming[style][f'Min{capType}fixAmount'] = min
+                naming[style][f'Max{capType}fixAmount'] = max
+            else:
+                print(f'No {type}fixes found for {style}')
+    luadata.write(os.path.join('Outputs', 'naming.lua'), naming, encoding="utf-8", indent="\t", prefix="return ") 
+
 
 def generate_name(style='Qudish', filename='Naming.xml'):
     tree = ET.parse(filename)
@@ -49,12 +84,17 @@ def getafix(namestyle, type='pre'):
 
 if __name__ == '__main__':
     qud_install_location = 'C:\Program Files (x86)\Steam\steamapps\common\Caves of Qud\CoQ_Data\StreamingAssets\Base'
-    command = ''
-    prev_name = 'Qudish'
-    while (command.strip("'").lower() != 'stop'):
-        command = input("Enter a name style ('stop' to quit): ")
-        if not command:
-            command = prev_name
-        else:
-            prev_name = command
-        print(generate_name(style=command, filename=os.path.join(qud_install_location, 'Naming.xml')))
+    naming_path = os.path.join(qud_install_location, 'Naming.xml')
+    dump = True
+    if dump:
+       namedump(naming_path) 
+    else:
+        command = ''
+        prev_name = 'Qudish'
+        while (command.strip("'").lower() != 'stop'):
+            command = input("Enter a name style ('stop' to quit): ")
+            if not command:
+                command = prev_name
+            else:
+                prev_name = command
+            print(generate_name(style=command, filename=naming_path))
