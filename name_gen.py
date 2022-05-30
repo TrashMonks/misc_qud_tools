@@ -1,7 +1,5 @@
 import xml.etree.ElementTree as ET
-import regex
-import random
-
+import regex, random, os
 
 def generate_name(style='Qudish', filename='Naming.xml'):
     tree = ET.parse(filename)
@@ -50,12 +48,13 @@ def getafix(namestyle, type='pre'):
         return ''
 
 if __name__ == '__main__':
+    qud_install_location = 'C:\Program Files (x86)\Steam\steamapps\common\Caves of Qud\CoQ_Data\StreamingAssets\Base'
     command = ''
     prev_name = 'Qudish'
-    while (command != 'stop'):
-        command = input("Enter a name style (stop to quit): ")
+    while (command.strip("'").lower() != 'stop'):
+        command = input("Enter a name style ('stop' to quit): ")
         if not command:
             command = prev_name
         else:
             prev_name = command
-        print(generate_name(style=command))
+        print(generate_name(style=command, filename=os.path.join(qud_install_location, 'Naming.xml')))
