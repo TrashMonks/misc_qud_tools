@@ -60,8 +60,8 @@ def generate_name(style='Qudish', filename='Naming.xml'):
     root = tree.getroot()
     for namestyle in root.find('namestyles').findall('namestyle'):
         if namestyle.get('Name') == style:
-            two_name_chance = namestyle.get('TwoNameChance')
-            if two_name_chance and random.randint(0, 100) < int(two_name_chance):
+            two_name_chance = int_with_default(namestyle.get('TwoNameChance'), 0)
+            if random.randint(0, 100) < two_name_chance:
                 name_count = 2
             else:
                 name_count = 1
@@ -79,23 +79,19 @@ def getafix(namestyle, type='pre'):
     if fixes is not None:
         fix_list = fixes.findall(type + 'fix')
         name_list = [f.get('Name') for f in fix_list]
-        weight_list = [int(f.get('Weight')) if f.get('Weight') else 1 for f in fix_list]
+        weight_list = [int_with_default(f.get('Weight'), 1) for f in fix_list]
         fix_count = fixes.get('Amount')
         match = regex.match(r'(\d+)(-(\d+))?', fix_count)
-        min = int(match.group(1))
-        max_str = match.group(3)
-        if max_str:
-            max = int(max_str)
-            amount = random.randint(min, max)
-        else:
-            amount = min
+        min = int_with_default(match.group(1), 0)
+        max = int_with_default(match.group(3), min)
+        amount = random.randint(min, max)
         result_fixes = random.choices(name_list, weights=weight_list, k=amount)
         result = ''
-        hyphenation_chance = namestyle.get('HyphenationChance')
+        hyphenation_chance = int_with_default(namestyle.get('HyphenationChance'), 0)
         for fix in result_fixes:
             result += fix
             check = random.randint(0, 100) 
-            if hyphenation_chance and check < int(hyphenation_chance):
+            if check < hyphenation_chance:
                 result += '-'
         return result
     else:
@@ -104,7 +100,7 @@ def getafix(namestyle, type='pre'):
 if __name__ == '__main__':
     qud_install_location = 'C:\Program Files (x86)\Steam\steamapps\common\Caves of Qud\CoQ_Data\StreamingAssets\Base'
     naming_path = os.path.join(qud_install_location, 'Naming.xml')
-    dump = True
+    dump = False
     if dump:
        namedump(naming_path) 
     else:
