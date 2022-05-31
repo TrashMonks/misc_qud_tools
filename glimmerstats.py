@@ -1,5 +1,5 @@
 from random import randint
-
+import os
 
 def get_num_psychic_hunters(glimmer: int):
     roll = randint(1, 1000)
@@ -56,6 +56,6 @@ for glimmer, counts in results.items():
     for num_hunters, count in counts.items():
         glimmer_table += f'\n|{count/trials:.2%}'
 glimmer_table += "\n|}"
-with open('glimmer_stats.txt', 'w') as file:
+with open(os.path.join('Outputs', 'glimmer_stats.txt'), 'w') as file:
     file.write(glimmer_table)
 print('Done')
