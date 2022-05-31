@@ -22,18 +22,37 @@ def namedump(filename='Naming.xml'):
             if fixes:
                 fix_count = fixes.get('Amount')
                 match = regex.match(r'(\d+)(-(\d+))?', fix_count)
-                min = int(match.group(1))
-                max_str = match.group(3)
-                if max_str:
-                    max = int(max_str)
-                else:
-                    max = min
+                min = int_with_default(match.group(1), 0)
+                max = int_with_default(match.group(3), min)
                 naming[style][capType + 'fixes'] = [f.get('Name') for f in fixes.findall(type + 'fix')]
                 naming[style][f'Min{capType}fixAmount'] = min
                 naming[style][f'Max{capType}fixAmount'] = max
             else:
+                naming[style][f'Min{capType}fixAmount'] = 0
+                naming[style][f'Max{capType}fixAmount'] = 0
                 print(f'No {type}fixes found for {style}')
-    luadata.write(os.path.join('Outputs', 'naming.lua'), naming, encoding="utf-8", indent="\t", prefix="return ") 
+    lua_string = luadata.serialize(naming, encoding="utf-8", 
+                                   indent="  ")
+    lua_string = "local naming = " + lua_string + """
+naming.get_keys = function()
+    local keyset = {}
+    for key, value in pairs(naming) do
+        if type(value) == 'table' then
+            table.insert(keyset, key)
+        end
+    end
+	table.sort(keyset)
+    local keys = ''
+    for i, key in ipairs(keyset) do
+        keys = keys .. ',' .. key:gsub("^%l", string.upper)
+    end
+    keys = keys:gsub("^,", "")
+    return keys
+end
+return naming
+"""    
+    with open(os.path.join('Outputs', 'naming.lua'), 'w') as file:
+        file.write(lua_string)
 
 
 def generate_name(style='Qudish', filename='Naming.xml'):
