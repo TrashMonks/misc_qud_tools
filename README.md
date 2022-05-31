@@ -10,9 +10,13 @@ it will use the last used style (Qudish by default).
 If CoQ is installed somewhere other than the usual Windows Steam location, edit qud_install_location.
 
 qud_grab.py reads the Caves of Qud patch notes from Itch and converts them into a wiki format.
-It can be run as a script which grabs the most recent hundred (or more by editing the code),
-but the read_patch_notes function can also be called on individual pages to convert them (e.g. for large
+The read_all function runs a script which grabs the most recent hundred (or more by changing the parameter),
+while the read_one function takes a url and gets its patch notes (e.g. for large
 updates which don't get recognized as patch notes due to not having a date in the title).
+By default it merges beta and main patch notes (as wiki policy is to merge non-current betas in with main),
+but it can separate them out by setting the separate_beta parameter to True.
+Output goes in Outputs/qud_patch_notes.
 
 glimmerstats.py is a script which generates a wiki table for the probability of different numbers of esper hunters appearing
 at different levels of psychic glimmer.
+Output goes in Outputs/glimmer_stats.txt.
