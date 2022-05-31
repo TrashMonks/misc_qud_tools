@@ -89,7 +89,7 @@ def read_patch_notes(driver, output_file, beta_file=None, skip_headerless=True):
         if notes_type == 'beta' and 'beta' not in date:
             date += " (beta)"
         header = f'=== {date} ===\n[{driver.current_url} Original patch notes]\n'
-        output_strings[output_selector(notes_type)] = header + output_strings[output_selector()]
+        output_strings[output_selector(notes_type)] = header + output_strings[output_selector(notes_type)]
     output_file.write(output_strings['main'])
     if beta_file is not None:
         beta_file.write(output_strings['beta'])
@@ -125,7 +125,7 @@ def read_one(url, separate_beta=False):
         read_patch_notes(driver, output_file, skip_headerless=False)
 
 if __name__ == '__main__':
-    # url = 'https://freeholdgames.itch.io/cavesofqud/devlog/162886/the-tomb-of-the-eaters-is-here'
+    # url = 'https://freeholdgames.itch.io/cavesofqud/devlog/348340/the-deep-jungle-feature-arc-is-here'
     # read_one(url)
     read_bulk(100)
     print('Done')
