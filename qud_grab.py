@@ -122,7 +122,13 @@ def read_one(url, separate_beta=False):
     driver = webdriver.Firefox()
     driver.get(url)
     with open(os.path.join(output_folder, 'qud_wiki_content.txt'), 'w') as output_file:
-        read_patch_notes(driver, output_file, skip_headerless=False)
+        if separate_beta:
+            beta_file = open(os.path.join(output_folder, 'qud_beta_content.txt'), 'w')
+        else:
+            beta_file=None
+        read_patch_notes(driver, output_file, beta_file, skip_headerless=False)
+        if beta_file is not None:
+            beta_file.close()
 
 if __name__ == '__main__':
     # url = 'https://freeholdgames.itch.io/cavesofqud/devlog/348340/the-deep-jungle-feature-arc-is-here'
