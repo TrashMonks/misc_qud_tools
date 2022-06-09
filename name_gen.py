@@ -16,8 +16,8 @@ def namedump(filename='Naming.xml'):
         base_style = namestyle.get('Base')
         if base_style:
             if base_style == '*':
-                continue
-            elif base_style.lower() not in naming:
+                base_style = 'Qudish'
+            if base_style.lower() not in naming:
                 print(f'{base_style} not found in usable name lists')
                 continue
             else:
@@ -51,10 +51,17 @@ def namedump(filename='Naming.xml'):
                 naming[style]['TemplateVars'][f"%*{var.get('Name')}%*"] = [val.get('Name') for val in var.findall('value')]
     lua_string = luadata.serialize(naming, encoding="utf-8", 
                                    indent="  ")
-    lua_string = "local naming = " + lua_string + """
-naming.get_keys = function()
+    default_vars_blob = root.find('defaulttemplatevars')
+    if default_vars_blob:
+        default_vars_dict = {'%*Patron%*': ['Agolgut', 'Bethsaida']}
+        template_vars = default_vars_blob.findall('templatevar')
+        for var in template_vars:
+            default_vars_dict[f"%*{var.get('Name')}%*"] = [val.get('Name') for val in var.findall('value')]
+    default_vars_string = luadata.serialize(default_vars_dict, encoding="utf-8", indent="  ")
+    lua_string = "p = {}\np.defaultvars = " + default_vars_string + "\np.naming = " + lua_string + """
+p.getkeys = function()
     local keyset = {}
-    for key, value in pairs(naming) do
+    for key, value in pairs(p.naming) do
         if type(value) == 'table' then
             table.insert(keyset, key)
         end
@@ -67,7 +74,7 @@ naming.get_keys = function()
     keys = keys:gsub("^,", "")
     return keys
 end
-return naming
+return p
 """    
     with open(os.path.join('Outputs', 'naming.lua'), 'w') as file:
         file.write(lua_string)
@@ -77,9 +84,11 @@ def generate_name(style='Qudish', filename='Naming.xml'):
     tree = ET.parse(filename)
     root = tree.getroot()
     for namestyle in root.find('namestyles').findall('namestyle'):
-        if namestyle.get('Name') == style:
+        if namestyle.get('Name').lower() == style.lower():
             base_style = namestyle.get('Base')
-            if base_style and base_style != '*':
+            if base_style:
+                if base_style == '*':
+                    base_style = 'Qudish'
                 full_name = generate_name(style=base_style, filename=filename)
             else:
                 two_name_chance = int_with_default(namestyle.get('TwoNameChance'), 0)
@@ -105,7 +114,7 @@ def generate_name(style='Qudish', filename='Naming.xml'):
                     template_vars = vars.findall('templatevar')
                 else:
                     template_vars = []
-                vars_parsed = {'Name': ([full_name], [1])}
+                vars_parsed = {'Name': ([full_name], [1]), 'Patron': (['Bethsaida', 'Agolgut'], [1, 1])}
                 for var in template_vars:
                     values = var.findall('value')
                     vars_parsed[var.get('Name')] = (
@@ -119,7 +128,9 @@ def generate_name(style='Qudish', filename='Naming.xml'):
                 return template
             else:
                 return full_name
-    print(f'Name style {style} not found')
+    if style != 'stop':
+        print(f'Name style {style} not found')
+    return ''
 
 def getafix(namestyle, type='pre'):
     fixes = namestyle.find(type + 'fixes')
@@ -147,7 +158,7 @@ def getafix(namestyle, type='pre'):
 if __name__ == '__main__':
     qud_install_location = 'C:\Program Files (x86)\Steam\steamapps\common\Caves of Qud\CoQ_Data\StreamingAssets\Base'
     naming_path = os.path.join(qud_install_location, 'Naming.xml')
-    dump = True
+    dump = False
     if dump:
        namedump(naming_path) 
     else:
@@ -159,4 +170,4 @@ if __name__ == '__main__':
                 command = prev_name
             else:
                 prev_name = command
-            print(generate_name(style=command, filename=naming_path))
+            print('\033[96m' + generate_name(style=command, filename=naming_path) + '\033[0m')
