@@ -105,7 +105,7 @@ def read_bulk(n=100, separate_beta=False):
     else:
         beta_file = None
     driver.get(url)  # could maybe be Steam
-    for i in range(100):  # adjust to as far back as you want to go
+    for i in range(n):
         update_links = driver.find_elements(
             by=By.CLASS_NAME, value='read_all_link')
         update_links[i].click()
@@ -133,5 +133,5 @@ def read_one(url, separate_beta=False):
 if __name__ == '__main__':
     # url = 'https://freeholdgames.itch.io/cavesofqud/devlog/348340/the-deep-jungle-feature-arc-is-here'
     # read_one(url)
-    read_bulk(100)
+    read_bulk(1)
     print('Done')
