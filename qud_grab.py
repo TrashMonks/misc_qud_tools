@@ -1,3 +1,4 @@
+from unittest.mock import NonCallableMagicMock
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -33,18 +34,23 @@ def make_wiki_list(data, level=0): # TODO this should parse out the html somehow
 
 class PatchNoteGrabber:
 
-    def __init__(self, separate_beta=True):
-        self.output_folder = 'Outputs/qud_patch_notes'
+    def __init__(self, output_folder='Outputs/qud_patch_notes', driver=None, 
+                 base_url='https://freeholdgames.itch.io/cavesofqud/devlog', date_format='%B %d, %Y',
+                 separate_beta=True):
+        self.output_folder = output_folder 
         if not os.path.exists(self.output_folder):
             os.mkdir(self.output_folder)
-        self.driver = webdriver.Firefox()
-        self.url = 'https://freeholdgames.itch.io/cavesofqud/devlog'
+        if driver is None:
+            self.driver = webdriver.Firefox()
+        else:
+            self.driver = driver
+        self.base_url = base_url
         self.output_file = open(os.path.join(self.output_folder, 'qud_wiki_content.txt'), 'w')
         if separate_beta:
             self.beta_file = open(os.path.join(self.output_folder, 'qud_beta_content.txt'), 'w')
         else:
             self.beta_file = None
-        self.date_format = '%B %d, %Y'
+        self.date_format = date_format
         with open('last_date.txt', 'r') as date_file:
             self.last_date = datetime.strptime(date_file.read(), self.date_format)
 
@@ -111,7 +117,7 @@ class PatchNoteGrabber:
         
     def read_most_recent(self, max=100, date_limit=True):
         most_recent_date = None
-        self.driver.get(self.url)  # could maybe be Steam
+        self.driver.get(self.base_url)  # could maybe be Steam
         for i in range(max):
             update_links = self.driver.find_elements(
                 by=By.CLASS_NAME, value='read_all_link')
@@ -132,6 +138,14 @@ class PatchNoteGrabber:
         if most_recent_date is not None:
             with open('last_date.txt', 'w') as date_file:
                 date_file.write(most_recent_date.strftime(self.date_format))
+    
+    def read_specified(self, url):
+        self.driver.get(url)
+        original_date, output_strings = self.read_patch_notes(skip_headerless=False)
+        if output_strings:
+            self.output_file.write(output_strings['main'])
+            if self.beta_file is not None:
+                self.beta_file.write(output_strings['beta'])
 
 
 
