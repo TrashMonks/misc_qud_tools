@@ -146,6 +146,9 @@ class PatchNoteGrabber:
             self.output_file.write(output_strings['main'])
             if self.beta_file is not None:
                 self.beta_file.write(output_strings['beta'])
+    
+    def close(self):
+        self.driver.close()
 
 
 
@@ -154,4 +157,6 @@ if __name__ == '__main__':
     # read_one(url)
     grab = PatchNoteGrabber()
     grab.read_most_recent()
+    # grab.read_specified('https://freeholdgames.itch.io/cavesofqud/devlog/464757/the-moon-stair-is-here')
+    grab.close()
     print('Done')
