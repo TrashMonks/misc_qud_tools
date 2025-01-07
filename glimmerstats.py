@@ -30,9 +30,9 @@ def get_num_psychic_hunters(glimmer: int):
 
 
 results = {}
-trials = 100000
+trials = 500000
 for trial in range(0, trials):
-    for i in range(0, 200, 20):
+    for i in range(1435, 1440, 1):
         if i not in results:
             results[i] = {}
         for num in range(6):
@@ -54,6 +54,8 @@ glimmer_table = """
 for glimmer, counts in results.items():
     glimmer_table += f'\n|-\n|{glimmer}'
     for num_hunters, count in counts.items():
+        if count > 0:
+            print(f'{glimmer}, {num_hunters}: {count/trials:.2%}')
         glimmer_table += f'\n|{count/trials:.2%}'
 glimmer_table += "\n|}"
 with open(os.path.join('Outputs', 'glimmer_stats.txt'), 'w') as file:

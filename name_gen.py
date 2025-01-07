@@ -40,10 +40,10 @@ def namedump(filename='Naming.xml'):
                 else:
                     naming[style][f'Min{capType}fixAmount'] = 0
                     naming[style][f'Max{capType}fixAmount'] = 0
-        title_templates_blob = namestyle.find('titletemplates')
-        if title_templates_blob:
-            naming[style]['TitleTemplates'] = [tt.get('Name') for tt in title_templates_blob.findall('titletemplate')]
-        template_vars_blob = namestyle.find('templatevars') 
+        templates_blob = namestyle.find('templates')
+        if templates_blob:
+            naming[style]['Templates'] = [tt.get('Name') for tt in templates_blob.findall('template')]
+        template_vars_blob = namestyle.find('templatevars')
         if template_vars_blob:
             naming[style]['TemplateVars'] = {}
             template_vars = template_vars_blob.findall('templatevar')
@@ -53,11 +53,13 @@ def namedump(filename='Naming.xml'):
                                    indent="  ")
     default_vars_blob = root.find('defaulttemplatevars')
     if default_vars_blob:
-        default_vars_dict = {'%*Patron%*': ['Agolgut', 'Bethsaida']}
+        default_vars_dict = {} # {'%*Patron%*': ['Agolgut', 'Bethsaida']}
         template_vars = default_vars_blob.findall('templatevar')
         for var in template_vars:
             default_vars_dict[f"%*{var.get('Name')}%*"] = [val.get('Name') for val in var.findall('value')]
-    default_vars_string = luadata.serialize(default_vars_dict, encoding="utf-8", indent="  ")
+        default_vars_string = luadata.serialize(default_vars_dict, encoding="utf-8", indent="  ")
+    else:
+        default_vars_string = "{}"
     lua_string = "p = {}\np.defaultvars = " + default_vars_string + "\np.naming = " + lua_string + """
 p.getkeys = function()
     local keyset = {}
@@ -97,15 +99,16 @@ def generate_name(style='Qudish', filename='Naming.xml'):
                 else:
                     name_count = 1
                 full_name = ''
-                for i in range(name_count):
+                for _ in range(name_count):
                     name = getafix(namestyle, 'pre') + getafix(namestyle, 'in') + getafix(namestyle, 'post')
                     name = name.strip('-')
-                    name = name[0].upper() + name[1:]
+                    if name:
+                        name = name[0].upper() + name[1:]
                     full_name += name + ' '
                 full_name = full_name.strip()
-            templates = namestyle.find('titletemplates')
+            templates = namestyle.find('templates')
             if templates:
-                title_templates = templates.findall('titletemplate')
+                title_templates = templates.findall('template')
                 template_weights = [int_with_default(tt.get('Weight'), 1) for tt in title_templates]
                 template_names = [tt.get('Name') for tt in title_templates]
                 template = random.choices(template_names, weights=template_weights)[0]
@@ -114,13 +117,14 @@ def generate_name(style='Qudish', filename='Naming.xml'):
                     template_vars = vars.findall('templatevar')
                 else:
                     template_vars = []
-                vars_parsed = {'Name': ([full_name], [1]), 'Patron': (['Bethsaida', 'Agolgut'], [1, 1])}
+                vars_parsed = {'Name': ([full_name], [1])} # , 'Patron': (['Bethsaida', 'Agolgut'], [1, 1])}
                 for var in template_vars:
                     values = var.findall('value')
                     vars_parsed[var.get('Name')] = (
                         [val.get('Name') for val in values],
                         [int_with_default(val.get('Weight'), 1) for val in values]
                     )
+                # print(vars_parsed)
                 for var, (var_values, weights) in vars_parsed.items():
                     if f'*{var}*' in template:
                         value = random.choices(var_values, weights=weights)[0]
@@ -156,9 +160,10 @@ def getafix(namestyle, type='pre'):
         return ''
 
 if __name__ == '__main__':
-    qud_install_location = 'C:\Program Files (x86)\Steam\steamapps\common\Caves of Qud\CoQ_Data\StreamingAssets\Base'
+    # qud_install_location = 'C:\Program Files (x86)\Steam\steamapps\common\Caves of Qud\CoQ_Data\StreamingAssets\Base'
+    qud_install_location = '.'
     naming_path = os.path.join(qud_install_location, 'Naming.xml')
-    dump = False
+    dump = True
     if dump:
        namedump(naming_path) 
     else:

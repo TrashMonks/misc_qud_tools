@@ -1,3 +1,4 @@
-Naming.xml
+*.xml
+*.txt
 Outputs/*
 geckodriver.log
